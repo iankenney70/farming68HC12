@@ -1,0 +1,55 @@
+; Initialization file
+    XDEF INITIALIZE
+    XREF ddr_p, Uddr, port_u_pol, port_u_cont, portU, Sddr, DDR_T, INTCR                        ;Port Initialization 
+    XREF anticlockwise, clockwise, anticlock_temp, clockwise_temp, dcflag, DC_counter, DC_Speed ;Motor Initialization
+    XREF RTICTL, CRGINT, qrtsec_pass, qrt_sec, halfsec_pass, second_pass, second, threesec_flag, count_RTI       ;Timing Initilization
+    XREF field, water, match, irrigate, fertilizer, field_finished, plow_var, plant_var  ;Field/LCD Initialization
+    ;XDEF , LCDwaitflag countRTI_flag 
+;code section
+MyCode:			SECTION
+INITIALIZE:
+		
+		movb	#$1E, ddr_p			; Initialize port p motor with 00011110
+        movb  	#$F0, Uddr          ;hexpad DDR: (upper nibble/rows/vertical is output. lower nibble/columns/horizontal is input)
+        movb  	#$F0, port_u_pol    ;hexpad polarity
+        movb 	#$0F, port_u_cont   ;hexpad control register
+        movb  	#$FF, portU         ;hexpad
+        movb  	#$FF, Sddr		  	; LEDs output via ddr
+        movb	#$28, DDR_T		    ; set bit 3 and 5 to make DC Motor and speaker operatable
+        movb    #$C0, INTCR         ; Initialize
+                
+                                    ;Field/LCD Initilization
+        movb	#15, plow_var
+        movb	#60, plant_var                                    
+		movb    #0, field			; Clear field flag (for the main)
+		movb	#0, water
+		movb    #0, irrigate        ; Clear irrigate flag (for the main)
+		movb	#0, fertilizer		; Clear fertilizer flag (for the main)
+        movb    #0, match			; Clear keypad index (for the keypad)
+        movb	#0, field_finished
+        
+                                                ;Motor Initilization                                        
+        movw	#anticlockwise, anticlock_temp
+        movw	#clockwise, clockwise_temp
+        movw	#260, DC_counter
+        movb	#0, dcflag
+        movb	#0, DC_Speed
+        
+                                    ;Timing Initilization
+        movb	#$10, RTICTL		; Set time interval to 0.000128ms
+		movb	#$80, CRGINT		; Enable interrupt
+        movb    #0, qrtsec_pass
+        movw    #00, qrt_sec
+        movb	#0, halfsec_pass
+        movb    #0, second_pass
+        movb	#0, second
+        movb    #0, threesec_flag
+        movw    #00, count_RTI
+        
+        
+        
+        ;movb	#0, countRTI_flag
+        ;movb	#0, LCDwaitflag
+        rts
+            							
+                

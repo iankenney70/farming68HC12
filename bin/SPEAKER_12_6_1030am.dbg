@@ -1,0 +1,165 @@
+;Speaker File
+    XDEF 	SPEAKER
+    XREF	omcdonald, plow_song, plant_song, harvest_song, fertilize_song, irrigate_song, long_note
+    XREF	SendsChr,PlayTone, qrtsec_pass, song_pass
+    ;countRTI_flag
+    XREF	field, irrigate, fertilizer 
+
+
+;My local variables
+MY_RAM:				        SECTION
+counter:	       ds.b		1		;counter for the song arrays
+
+
+MyCode:     	SECTION
+SPEAKER:
+		;sei
+		cli
+		pshd
+		pshx
+		pshy
+		ldaa	field
+		cmpa	#0
+		lbeq	welcomesong
+		cmpa	#6					
+		lbeq	plowsong 				; field = 6 = stage of plowing
+		cmpa	#7
+		lbeq	plantsong				; field = 7 = stage of planting
+		cmpa	#8					
+		lbeq	harvestsong			; field = 5 = stage of harvesting         
+;DC MOTOR path	
+        ldaa	fertilizer
+		cmpa	#1
+		lbeq	fertilizesong			; 
+		ldaa	irrigate
+		cmpa	#1					
+		lbeq	irrigatesong
+		bra		welcomesong		
+		;movb	#0, counter
+
+
+
+welcomesong:				
+		ldx		#omcdonald              ;notes in x
+repeat_welcome:
+		ldab 	counter				;was song_pass
+		ldaa 	b,x                    ;notes,x offset by rhythmn,a in b
+play1:
+		;pclr		qrtsec_pass
+		pshb
+		pshx
+		psha
+		jsr		SendsChr
+		jsr		PlayTone
+		pula
+		pulx
+		pulb
+		;brclr   qrtsec_pass, #$01, play1
+		;clr		qrtsec_pass
+		;inc 	counter
+		;ldab	counter
+		; ldaa element
+		; psha
+		; jsr SendsChr
+		; pula
+		; inc count
+		; call PlayTone until count = number
+		; repeat up to ldaa element
+		cmpb 	#20			;how long is the song?
+		blt		repeat_welcome
+		lbra		EXIT
+	
+		
+plowsong:				
+		ldx		#omcdonald              ;notes in x
+repeat_plowsong:
+		ldab 	song_pass				;loads
+		ldaa 	b,x                    ;notes,x offset by rhythmn,a in b
+		pshb
+		pshx
+		psha
+		jsr		SendsChr
+		jsr		PlayTone
+		pula
+		pulx
+		pulb		
+		cmpb 	#20			;how long is the song?
+		blt		repeat_plowsong
+		lbra		EXIT
+		
+plantsong:				
+		ldx		#plant_song              ;notes in x
+repeat_plantsong:
+		ldab 	song_pass				;loads
+		ldaa 	b,x                    ;notes,x offset by rhythmn,a in b
+			pshb
+		pshx
+		psha
+		jsr		SendsChr
+		jsr		PlayTone
+		pula
+		pulx
+		pulb		 
+			cmpb 	#20			;how long is the song?
+		blt		repeat_plantsong
+		lbra		EXIT
+
+		
+harvestsong:				
+		ldx		#harvest_song              ;notes in x
+repeat_harvestsong:
+		ldab 	song_pass				;loads
+		ldaa 	b,x                    ;notes,x offset by rhythmn,a in b
+			pshb
+		pshx
+		psha
+		jsr		SendsChr
+		jsr		PlayTone
+		pula
+		pulx
+		pulb		
+			cmpb 	#20			;how long is the song?
+		blt		repeat_harvestsong
+		lbra		EXIT
+		
+		
+fertilizesong:				
+		ldx		#fertilize_song              ;notes in x
+repeat_fertilizesong:
+		ldab 	song_pass				;loads
+		ldaa 	b,x                    ;notes,x offset by rhythmn,a in b
+			pshb
+		pshx
+		psha
+		jsr		SendsChr
+		jsr		PlayTone
+		pula
+		pulx
+		pulb		
+			cmpb 	#20			;how long is the song?
+		blt		repeat_fertilizesong
+		lbra		EXIT
+		
+irrigatesong
+			ldx		#irrigate_song              ;notes in x
+repeat_irrigatesong:
+		ldab 	song_pass				;loads
+		ldaa 	b,x                    ;notes,x offset by rhythmn,a in b
+			pshb
+		pshx
+		psha
+		jsr		SendsChr
+		jsr		PlayTone
+		pula
+		pulx
+		pulb		
+			cmpb 	#20			;how long is the song?
+		blt		repeat_irrigatesong
+		lbra		EXIT
+		
+EXIT:
+		movb	#0, song_pass	
+		puly
+		pulx
+		puld
+		rts		

@@ -1,0 +1,34 @@
+;Clearing out strings
+    XREF disp
+    XREF field
+    XDEF CLEARING
+
+;Variable/data section
+MY_RAM:					SECTION
+plow_counter:   ds.b    1
+;code section
+MyCode:             SECTION
+CLEARING:
+            pshd
+            pshx
+            pshy
+            
+            
+;/************************************NEED FOR CLEARING OUT THE DISP STRING************************************************/            
+            movb    #32, plow_counter   ;clear and prepare to clean plow_disp with plow_counter
+            ldx     #disp
+repeat:
+            movb	#' ', 1,x+
+            ldaa    plow_counter
+            dbeq    a, set_null
+            staa    plow_counter
+            bra     repeat             
+
+;/************************************EXITING SUBROUTINE************************************************/
+set_null:
+            movb    #0, disp+32                  
+EXIT_CLEAR:            
+            puly
+            pulx
+            puld
+            rts

@@ -1,0 +1,102 @@
+		XDEF KEYPAD, KEYPADloop
+        XREF match, portU, PTP, field, CropCondition5A, HARVESTATION
+        XREF display_string, CROP_FINISHED
+        
+        
+;KenneyLab5.2
+My_Variables:  section
+temp:     ds.b  1
+counter:  ds.b  1
+
+My_Constants:  section
+rows:         dc.b  $70,$b0,$d0,$e0,$0
+lookupTB:     dc.b  $eb,$77,$7b,$7d,$b7,$bb,$bd,$d7,$db,$dd,$e7,$ed,$7e,$be,$de,$ee,$0
+
+MyCode:     SECTION
+main:
+_Startup:
+KEYPAD:
+			pshd
+            pshy
+            pshx
+            ldaa	field
+           	cmpa	#5
+            bne		KEYPADloop
+            ldab	PTP 
+			orab	#%11011111
+			cmpb	#%11011111
+            bne		KEYPADloop
+            
+            ldd		#CropCondition5A
+			jsr		display_string
+            ldab	PTP 
+			orab	#%11011111
+			cmpb	#%11011111
+			bne		KEYPADloop
+            
+            jsr		HARVESTATION
+		              
+;continue_keysearch:              
+              ;ldaa  #0
+              ;staa  counter
+              
+              
+KEYPADloop:         
+			ldx   #rows                 ;effective address of rows in x
+nextrow:    ldaa  1,x+                  ;contents of rows in and increment to next row for next time.
+            beq   EXIT                  ;loop if hit terminator end of row string
+            staa  portU                 ;row in port_U
+            jsr   delaysub              ;wait 1ms subroutine
+            ldaa  portU                 ;row back in a
+            staa  temp                  ;store row value in a because a gets messed up in sub, push/pula didnt work
+            jsr   debouncesub
+            ldaa  temp                  ;retrieve row back to a because ^
+            cmpa  #$7f                  ;check to see if first element of row is in a, 
+            beq   nextrow                 
+            cmpa  #$bf                  ;check to see if second element of row is in a
+            beq   nextrow
+            cmpa  #$df                  ;""
+           	beq   nextrow
+            cmpa  #$ef                  ;""
+            beq   nextrow
+                                          ;continue once all rows checked
+            ldab  #0                    ;count in b tells which key has been pressed
+            ldy   #lookupTB             ;effective address of hexvalue lookuptable in y
+read:       cmpa  1,y+                  ;is pressed key same as current one in lookuptable? 
+                                          ;(contents of address of lookuptable in a)
+            beq   found                 ;if a match has been found, branch to display on LEDs
+            incb                        ;else, increment count and keep going
+            cmpb  #16                   ;while fewer than 16 keys have been checked
+            bne   read                  ;continue reading if less than 16
+            bra   EXIT                  ;go back to beginning if still no match found
+              
+found:		stab  match
+EXIT:	    ldaa	CROP_FINISHED
+			cmpa	#1
+			beq		FINAL
+			pulx
+			puly
+			puld
+FINAL:		
+			movb	#0, CROP_FINISHED
+			rts
+			
+			
+			
+           
+delaysub:     pshx                        ;save key row in x to stack
+              ldx   #1000                 ;load y with 1000 for 1ms
+loop2:        dex                         ;decrement y
+              bne   loop2                 ;until decrement 1000 times, loop back
+              pulx                        ;once 1ms has passed compensate stack
+              rts
+                                          ;and return
+              
+              
+debouncesub:  jsr   delaysub              ;nested 1ms delay subroutine
+              ldaa  portU                 ;value of portU in a
+              anda  #$0F                  ;is it equal to 0F
+              cmpa  #$0F
+              bne   debouncesub           ;if not repeat
+              rts
+                                          ;if equal return 
